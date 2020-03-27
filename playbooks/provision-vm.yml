@@ -4,13 +4,17 @@
   connection: local
   gather_facts: no
   user: root
+  vars_prompt:
+    - name: hostname
+      prompt: "What will be the FQDN of your vm?" 
+      private: no
 
   tasks:
 
   - name: Create a basic server
     hcloud_server:
         #api_token: "{{ hcloud_token }}"
-        name: test.ubuntu-laptop.nl
+        name: '{{ hostname }}'
         server_type: cx11
         image: ubuntu-18.04
         state: present
