@@ -1,0 +1,21 @@
+---
+
+- hosts: all
+  #connection: local
+  user: "{{ sudo_user }}"
+  become: yes
+  become_method: sudo
+  become_user: root
+
+  tasks:
+  
+  - name: setup
+    setup:
+      gather_subset:
+      - '!all'
+
+  - name: apt install
+    apt:
+      name: vim
+      state: present
+      update_cache: yes
