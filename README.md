@@ -8,8 +8,8 @@ Make sure you have ansible >= 2.8 installed
 pip3 install hcloud --user
 ```
 
-## usage
+## usage for provisoning vm
 
 ```
-HCLOUD_TOKEN=XXXXXXXXX  ansible-playbook -i inventory/  playbooks/setup-jitsi.yml
+HCLOUD_TOKEN=XXXXXXXXX  ansible-playbook -i inventory/  playbooks/provision-vm.yml
 ```
