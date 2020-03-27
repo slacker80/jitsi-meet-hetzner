@@ -1,0 +1,15 @@
+- name: Install jitsi repository key
+  apt_key:
+    url: https://download.jitsi.org/jitsi-key.gpg.key
+    state: present
+
+- name: Add the jitsi repo
+  apt_repository:
+    repo: deb https://download.jitsi.org stable
+    state: present
+    filename: jitsi-stable
+
+- name: Install jitsi-meet suite 
+  apt:
+    name: jitsi-meet
+    state: latest
