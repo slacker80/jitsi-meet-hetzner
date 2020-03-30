@@ -4,6 +4,7 @@ jitsi-meet@hetzner
 ## prerequisites
 
 Make sure you have ansible >= 2.8 installed
+Make sure you have python3-dns installed via package manager or via pip3 `dnspython`
 ```
 pip3 install hcloud --user
 ```

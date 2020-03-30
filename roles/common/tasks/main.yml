@@ -1,0 +1,52 @@
+---
+
+- name: Set hostname
+  hostname:
+    name: '{{ inventory_hostname }}'
+
+- name: Install needed packages
+  apt:
+    name: '{{ item }}'
+    state: latest
+    update_cache: yes
+  loop: '{{ packages }}'
+
+- name: Provision firewalld rules from variable  {{ firewalld }}  
+  firewalld:
+    service: '{{ item.service }}'
+    zone: '{{ item.zone }}'
+    permanent: '{{ item.permanent }}'
+    state: '{{ item.state }}'
+  loop: '{{ firewalld }}'
+  notify: "reload firewall" 
+
+- name: Add user for ssh
+  user:
+    name: '{{ ssh_user }}'
+    shell: /bin/bash
+    generate_ssh_key: yes
+    ssh_key_bits: 2048
+
+- name: Fetch ssh public keys added on vm provisioning and add these 
+  copy: 
+    src: "/root/.ssh/authorized_keys"
+    remote_src: yes
+    dest: "/home/{{ ssh_user }}/.ssh/authorized_keys"
+    owner: '{{ ssh_user }}'
+    group: '{{ ssh_user }}'
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Set sudo for {{ ssh_user }}
+  template:
+    src: usersudo.j2
+    dest: "/etc/sudoers.d/{{ ssh_user }}"
+    validate: "visudo -cf %s"
+    owner: root
+    group: root
+    mode: "0440"
+
+- name: Put sshd_config in place
+  template:
+    src: sshd_config.j2
+    dest: /etc/ssh/sshd_config
+  notify: "reload ssh" 

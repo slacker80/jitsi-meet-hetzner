@@ -1,0 +1,11 @@
+---
+
+- name: reload firewalld
+  shell: firewall-cmd --reload
+  listen: "reload firewall"
+
+- name: reload ssh
+  systemd:
+    name: ssh
+    state: restarted
+  listen: "reload ssh"

@@ -4,19 +4,55 @@
   connection: local
   gather_facts: no
   user: root
-  vars_prompt:
-    - name: hostname
-      prompt: "What will be the FQDN of your vm?" 
-      private: no
+#  vars_prompt:
+#    - name: hostname
+#      prompt: "What will be the FQDN of your vm?" 
+#      private: no
+
+  vars:
+    - hostname: test.ubuntu-laptop.nl
 
   tasks:
 
   - name: Create a basic server
     hcloud_server:
-        #api_token: "{{ hcloud_token }}"
         name: '{{ hostname }}'
         server_type: cx11
+        location: nbg1
         image: ubuntu-18.04
         state: present
         ssh_keys: '{{ ssh_keys }}'
     register: server
+
+  - debug:
+      msg: "{{ server }}"
+
+  - name: Register vm_ip and dns_truth for FQDN
+    set_fact:
+      vm_ip: "{{ server.hcloud_server.ipv4_address }}"
+      dns_truth: "{{ lookup('dig', '{{ hostname }}.', 'qtype=A') }}"
+
+  - name: Make sure DNS records are in place for use with letsencrypt certificate 
+    debug:
+      msg: "Please create DNS A record: {{ hostname }}. 60  IN  A  {{ vm_ip }} and a wilcard A record: *.{{ hostname }}. 60  IN  A  {{ vm_ip }}"
+    until: dns_truth == vm_ip
+    retries: 1
+    delay: 10
+    ignore_errors: true
+
+  - name: Add host to inventory
+    add_host:
+      hostname: "{{ hostname }}"
+      groups: "jitsi,this-run"
+      ansible_host: "{{ vm_ip }}"
+ 
+- hosts: jitsi 
+  gather_facts: no
+  user: root
+
+  roles:
+    - common
+    - jitsi-meet
+      
+
+    #To do: get ip address and make sure FQDN resolves

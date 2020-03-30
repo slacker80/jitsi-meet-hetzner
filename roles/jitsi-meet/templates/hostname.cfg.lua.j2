@@ -1,0 +1,47 @@
+-- Plugins path gets uncommented during jitsi-meet-tokens package install - that's where token plugin is located
+--plugin_paths = { "/usr/share/jitsi-meet/prosody-plugins/" }
+
+VirtualHost "{{ inventory_hostname }}"
+        -- enabled = false -- Remove this line to enable this host
+        authentication = "anonymous"
+        -- Properties below are modified by jitsi-meet-tokens package config
+        -- and authentication above is switched to "token"
+        --app_id="example_app_id"
+        --app_secret="example_app_secret"
+        -- Assign this host a certificate for TLS, otherwise it would use the one
+        -- set in the global section (if any).
+        -- Note that old-style SSL on port 5223 only supports one certificate, and will always
+        -- use the global one.
+        ssl = {
+                key = "/etc/prosody/certs/{{ inventory_hostname }}.key";
+                certificate = "/etc/prosody/certs/{{ inventory_hostname }}.crt";
+        }
+        -- we need bosh
+        modules_enabled = {
+            "bosh";
+            "pubsub";
+            "ping"; -- Enable mod_ping
+        }
+
+        c2s_require_encryption = false
+
+Component "conference.{{ inventory_hostname }}" "muc"
+    storage = "none"
+    --modules_enabled = { "token_verification" }
+admins = { "focus@auth.{{ inventory_hostname }}" }
+
+Component "jitsi-videobridge.{{ inventory_hostname }}"
+    component_secret = "{{ jitsi_meet_videobridge_secret }}"
+
+
+VirtualHost "auth.{{ inventory_hostname }}"
+    ssl = {
+        key = "/etc/prosody/certs/auth.{{ inventory_hostname }}.key";
+        certificate = "/etc/prosody/certs/auth.{{ inventory_hostname }}.crt";
+    }
+    authentication = "internal_plain"
+
+Component "focus.{{ inventory_hostname }}"
+    component_secret = "OlM76Fcs"
+
+Component "callcontrol.{{ inventory_hostname }}" component_secret = "WAYAdtzg"

@@ -1,6 +1,6 @@
 ---
 
-- hosts: all
+- hosts: jitsi
   #connection: local
   user: "{{ sudo_user }}"
   become: yes

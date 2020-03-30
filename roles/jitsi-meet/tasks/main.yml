@@ -5,11 +5,46 @@
 
 - name: Add the jitsi repo
   apt_repository:
-    repo: deb https://download.jitsi.org stable
+    repo: "deb https://download.jitsi.org stable/"
     state: present
     filename: jitsi-stable
 
 - name: Install jitsi-meet suite 
   apt:
-    name: jitsi-meet
+    update_cache: yes
+    name: '{{ item }}'
     state: latest
+    install_recommends: no
+  ignore_errors: true
+  loop:
+    - apt-transport-https
+    - default-jre-headless
+
+- name: Put prosody config in place
+  template:
+    src: hostname.cfg.lua.j2
+    dest: "/etc/prosody/conf.avail/{{ inventory_hostname }}.cfg.lua"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Create symlink for prosody config file to /etc/prosody/conf.d/ 
+  file:
+    src: "/etc/prosody/conf.avail/{{ inventory_hostname }}.cfg.lua"
+    dest: "/etc/prosody/conf.d/{{ inventory_hostname }}.cfg.lua"
+    state: link
+    owner: root
+    group: root
+
+- name: Install jitsi-meet suite 
+  apt:
+    update_cache: yes
+    name: '{{ item }}'
+    state: latest
+    install_recommends: no
+  loop:
+    - jitsi-meet
+    - jitsi-meet-prosody
+
+# https://github.com/freedomofpress/ansible-role-jitsi-meet/blob/master/tasks/dynamic_vars.yml
+ 

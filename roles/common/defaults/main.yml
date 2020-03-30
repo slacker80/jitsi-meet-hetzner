@@ -1,0 +1,17 @@
+---
+packages:
+- firewalld
+
+
+firewalld:
+- service: https
+  zone: public
+  permanent: yes
+  state: enabled
+- service: ssh
+  zone: public
+  permanent: yes
+  state: enabled
+
+
+ssh_user: jitsi
