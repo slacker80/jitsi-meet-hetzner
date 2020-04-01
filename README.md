@@ -59,9 +59,6 @@ The following tags are available
 | hcloud_image                  | hcloud image | yes |
 
 
-
-
-
 ## usage for provisoning vm
 
 ```
