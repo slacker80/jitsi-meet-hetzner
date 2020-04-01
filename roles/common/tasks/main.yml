@@ -19,6 +19,7 @@
     state: '{{ item.state }}'
   loop: '{{ firewalld }}'
   notify: "reload firewall" 
+  tags: [ firewalld ]
 
 - name: Add user for ssh
   user:

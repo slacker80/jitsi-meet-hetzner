@@ -23,6 +23,7 @@
         state: present
         ssh_keys: '{{ ssh_keys }}'
     register: server
+    tags: [ always ]
 
   - debug:
       msg: "{{ server }}"
@@ -31,6 +32,7 @@
     set_fact:
       vm_ip: "{{ server.hcloud_server.ipv4_address }}"
       dns_truth: "{{ lookup('dig', '{{ hostname }}.', 'qtype=A') }}"
+    tags: [ always ]
 
   - name: Make sure DNS records are in place for use with letsencrypt certificate 
     debug:
@@ -45,6 +47,7 @@
       hostname: "{{ hostname }}"
       groups: "jitsi,this-run"
       ansible_host: "{{ vm_ip }}"
+    tags: [ always ]
  
 - hosts: jitsi 
   gather_facts: no

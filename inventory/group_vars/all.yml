@@ -3,3 +3,5 @@ sudo_user: jitsi
 ssh_user: jitsi
 ssh_keys:
   - peter.smallegange@yourhosting.local@WPL386
+
+letsencrypt_email: petersmallegang@gmail.com

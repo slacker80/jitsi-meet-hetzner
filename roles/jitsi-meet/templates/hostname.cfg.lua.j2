@@ -1,3 +1,5 @@
+# {{ ansible_managed }}
+
 -- Plugins path gets uncommented during jitsi-meet-tokens package install - that's where token plugin is located
 --plugin_paths = { "/usr/share/jitsi-meet/prosody-plugins/" }
 
@@ -42,6 +44,6 @@ VirtualHost "auth.{{ inventory_hostname }}"
     authentication = "internal_plain"
 
 Component "focus.{{ inventory_hostname }}"
-    component_secret = "OlM76Fcs"
+    component_secret = "{{ jitsi_meet_jicofo_secret }}"
 
-Component "callcontrol.{{ inventory_hostname }}" component_secret = "WAYAdtzg"
+Component "callcontrol.{{ inventory_hostname }}" component_secret = "{{ jitsi_meet_callcontrol_secret }}"

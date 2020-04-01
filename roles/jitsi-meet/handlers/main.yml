@@ -1,0 +1,19 @@
+- name: restart prosody
+  systemd:
+    name: prosody
+    state: restarted
+
+- name: restart jicofo
+  systemd:
+    name: jicofo
+    state: restarted
+
+- name: restart jitsi-videobridge
+  systemd:
+    name: jitsi-videobridge2
+    state: restarted
+
+- name: restart nginx
+  systemd:
+    name: nginx
+    state: restarted

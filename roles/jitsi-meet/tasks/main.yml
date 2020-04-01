@@ -9,16 +9,14 @@
     state: present
     filename: jitsi-stable
 
-- name: Install jitsi-meet suite 
+- name: Install {{ jitsi_needed_packages }}
   apt:
     update_cache: yes
     name: '{{ item }}'
     state: latest
     install_recommends: no
   ignore_errors: true
-  loop:
-    - apt-transport-https
-    - default-jre-headless
+  loop: '{{ jitsi_needed_packages }}'
 
 - name: Put prosody config in place
   template:
@@ -36,6 +34,19 @@
     owner: root
     group: root
 
+## Thanks to: https://github.com/freedomofpress/ansible-role-jitsi-meet
+- name: Register jicofo agent with Prosody service.
+  command: >
+    prosodyctl register focus auth.{{ inventory_hostname }} {{ jitsi_meet_jicofo_password }}
+  args:
+    # Yes, prosody actually URL-escapes the directory name for some reason.
+    # Must hardcode the escaping in the prefix, since the replace filter only
+    # applies to the server name var, not the concatenated string.
+    creates: /var/lib/prosody/{{ 'auth%2e'+inventory_hostname | replace('.', '%2e') }}/accounts/focus.dat
+  notify:
+    #- restart jicofo
+    - restart prosody
+
 - name: Install jitsi-meet suite 
   apt:
     update_cache: yes
@@ -44,7 +55,98 @@
     install_recommends: no
   loop:
     - jitsi-meet
-    - jitsi-meet-prosody
+    #- jitsi-meet-prosody
 
-# https://github.com/freedomofpress/ansible-role-jitsi-meet/blob/master/tasks/dynamic_vars.yml
- 
+- name: Put configs in place 
+  template:
+    src:  '{{ item.src }}'
+    dest: '/etc/jitsi/{{ item.dest }}'
+    owner: root
+    group: root
+    mode: 0644
+  loop:
+    - { src: 'callcontrol-hostname-config.js.j2', dest: 'meet/{{ inventory_hostname }}-config.js' }
+    - { src: 'jicofo-config.js.j2', dest: 'jicofo/configs' }
+    - { src: 'videobridge-config.js.j2', dest: 'videobridge/configs' }
+
+- name: Remove default localhost Jitsi Meet config file.
+  file:
+    path: /etc/jitsi/meet/localhost-config.js
+    state: absent
+  notify: restart jitsi-videobridge
+
+- name: Remove Jicofo user config for localhost site.
+  file:
+    path: /var/lib/prosody/auth%2elocalhost
+    state: absent
+  notify:
+    - restart jicofo
+    - restart prosody
+
+- name: Remove default localhost Prosody config file.
+  file:
+    path: /etc/prosody/conf.d/localhost.cfg.lua
+    state: absent
+  notify: restart prosody
+
+  # The "server_names_hash_bucket_size" directive should only occur once in the
+  # Nginx config. If it's duplicated, even only in "available" sites rather than
+  # "enabled", nginx will fail to start. Since this role writes it in a template
+  # when using custom SSL keys, we'll clean up the default localhost file to avoid
+  # duplicating the config line.
+- name: Remove default localhost Nginx config file.
+  file:
+    path: "{{ item }}"
+    state: absent
+  notify: 
+    - restart nginx
+    - restart jitsi-videobridge
+    - restart jicofo
+    - restart prosody
+  with_items:
+    - /etc/nginx/sites-available/localhost.conf
+    - /etc/nginx/sites-enabled/localhost.conf    
+
+- name: Copy slightly modified /usr/share/jitsi-meet/scripts/install-letsencrypt-cert.sh 
+  template:
+    src: install-letsencrypt-cert.sh.j2
+    dest: /usr/share/jitsi-meet/scripts/install-letsencrypt-cert.sh
+    owner: root
+    group: root
+  tags: [ jitsi-letsencrypt ]
+
+- name: reload firewalld 
+  shell: |
+    firewall-cmd --reload 
+
+- name: Stop nginx 
+  systemd:
+    name: nginx
+    state: stopped
+
+- name: Execute install-letsencrypt-cert.sh 
+  shell: |
+    /usr/share/jitsi-meet/scripts/install-letsencrypt-cert.sh  {{ letsencrypt_email }}
+  tags: [ jitsi-letsencrypt ]
+
+- name: Copy Nginx config for Jitsi Meet domain.
+  template:
+    dest: "/etc/nginx/sites-available/{{ inventory_hostname }}.conf"
+    src: hostname.conf.j2
+    owner: root
+    group: root
+    mode: "0644"
+  notify: restart nginx
+
+- name: Deactivate default Nginx site.
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: restart nginx
+
+- name: Activate custom Jitsi Meet Nginx site.
+  file:
+    path: "/etc/nginx/sites-enabled/{{ inventory_hostname }}.conf"
+    src: "/etc/nginx/sites-available/{{ inventory_hostname }}.conf"
+    state: link
+  notify: restart nginx

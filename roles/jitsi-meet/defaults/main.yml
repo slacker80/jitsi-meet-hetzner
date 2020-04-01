@@ -1,3 +1,9 @@
-jitsi_meet_videobridge_secret: ''
-jitsi_meet_jicofo_secret: ''
-jitsi_meet_jicofo_password: ''
+jitsi_meet_videobridge_secret: 'HJJ785CvX'
+jitsi_meet_jicofo_secret: '09KlVb5A87'
+jitsi_meet_callcontrol_secret: 'KlFsdY78Rv'
+jitsi_meet_jicofo_password: 'HRwk179Pm'
+
+
+jitsi_needed_packages:
+  - prosody
+  - libterm-readline-gnu-perl
