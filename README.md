@@ -19,13 +19,13 @@ inventory/group_vars/all.yml
 
 ```
 
-* Make sure you have a registered domain name to create needed DNS records, ou will be asked to create these records when running `provision-vm.yml` as we don't know the ip address yet:
+* Make sure you have a registered domain name to create needed DNS records, you will be asked to create these records when running `provision-vm.yml` as we don't know the ip address yet:
 ```
 jitsi.example.com. 60  IN  A  111.111.111.111
 *.jitsi.example.com. 60  IN  A  111.111.111.111
 ```
 
-* Make sure you have variables set in inventory/group_vars/all.yml as desribed below
+* Make sure you have variables set in `inventory/group_vars/all.yml` as desribed below
 
 ## Tags
 ----
@@ -46,7 +46,7 @@ The following tags are available
 
 | variable | description | required
 | --- | --- | --- |
-| hostname                      | Resolvable FQDN for you jitsi vm | yes |
+| hostname                      | Resolvable FQDN for your jitsi vm | yes |
 | ssh_user                      | ssh user to logon vm | yes |
 | ssh_keys                      | ssh keys from your Hetzner cloud account | yes |
 | letsencrypt_email             | email address for use with letsencrypt  | yes |
