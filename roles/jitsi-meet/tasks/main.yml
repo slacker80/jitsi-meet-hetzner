@@ -2,12 +2,14 @@
   apt_key:
     url: https://download.jitsi.org/jitsi-key.gpg.key
     state: present
+  tags: [ jitsi-meet ]
 
 - name: Add the jitsi repo
   apt_repository:
     repo: "deb https://download.jitsi.org stable/"
     state: present
     filename: jitsi-stable
+  tags: [ jitsi-meet ]
 
 - name: Install {{ jitsi_needed_packages }}
   apt:
@@ -17,6 +19,7 @@
     install_recommends: no
   ignore_errors: true
   loop: '{{ jitsi_needed_packages }}'
+  tags: [ jitsi-meet ]
 
 - name: Put prosody config in place
   template:
@@ -25,6 +28,7 @@
     owner: root
     group: root
     mode: 0644
+  tags: [ jitsi-meet ]
 
 - name: Create symlink for prosody config file to /etc/prosody/conf.d/ 
   file:
@@ -33,6 +37,7 @@
     state: link
     owner: root
     group: root
+  tags: [ jitsi-meet ]
 
 ## Thanks to: https://github.com/freedomofpress/ansible-role-jitsi-meet
 - name: Register jicofo agent with Prosody service.
@@ -46,6 +51,7 @@
   notify:
     #- restart jicofo
     - restart prosody
+  tags: [ jitsi-meet ]
 
 - name: Install jitsi-meet suite 
   apt:
@@ -55,7 +61,7 @@
     install_recommends: no
   loop:
     - jitsi-meet
-    #- jitsi-meet-prosody
+  tags: [ jitsi-meet ]
 
 - name: Put configs in place 
   template:
@@ -68,12 +74,14 @@
     - { src: 'callcontrol-hostname-config.js.j2', dest: 'meet/{{ inventory_hostname }}-config.js' }
     - { src: 'jicofo-config.js.j2', dest: 'jicofo/configs' }
     - { src: 'videobridge-config.js.j2', dest: 'videobridge/configs' }
+  tags: [ jitsi-meet ]
 
 - name: Remove default localhost Jitsi Meet config file.
   file:
     path: /etc/jitsi/meet/localhost-config.js
     state: absent
   notify: restart jitsi-videobridge
+  tags: [ jitsi-meet ]
 
 - name: Remove Jicofo user config for localhost site.
   file:
@@ -82,12 +90,14 @@
   notify:
     - restart jicofo
     - restart prosody
+  tags: [ jitsi-meet ]
 
 - name: Remove default localhost Prosody config file.
   file:
     path: /etc/prosody/conf.d/localhost.cfg.lua
     state: absent
   notify: restart prosody
+  tags: [ jitsi-meet ]
 
   # The "server_names_hash_bucket_size" directive should only occur once in the
   # Nginx config. If it's duplicated, even only in "available" sites rather than
@@ -106,6 +116,7 @@
   with_items:
     - /etc/nginx/sites-available/localhost.conf
     - /etc/nginx/sites-enabled/localhost.conf    
+  tags: [ jitsi-meet ]
 
 - name: Copy slightly modified /usr/share/jitsi-meet/scripts/install-letsencrypt-cert.sh 
   template:
@@ -113,21 +124,23 @@
     dest: /usr/share/jitsi-meet/scripts/install-letsencrypt-cert.sh
     owner: root
     group: root
-  tags: [ jitsi-letsencrypt ]
+  tags: [ jitsi-letsencrypt,jitsi-meet ]
 
 - name: reload firewalld 
   shell: |
     firewall-cmd --reload 
+  tags: [ jitsi-letsencrypt,jitsi-meet ]
 
 - name: Stop nginx 
   systemd:
     name: nginx
     state: stopped
+  tags: [ jitsi-letsencrypt,jitsi-meet ]
 
 - name: Execute install-letsencrypt-cert.sh 
   shell: |
     /usr/share/jitsi-meet/scripts/install-letsencrypt-cert.sh  {{ letsencrypt_email }}
-  tags: [ jitsi-letsencrypt ]
+  tags: [ jitsi-letsencrypt,jitsi-meet ]
 
 - name: Copy Nginx config for Jitsi Meet domain.
   template:
@@ -137,12 +150,13 @@
     group: root
     mode: "0644"
   notify: restart nginx
+  tags: [ jitsi-meet,nginx ]
 
 - name: Deactivate default Nginx site.
   file:
     path: /etc/nginx/sites-enabled/default
     state: absent
-  notify: restart nginx
+  tags: [ jitsi-meet,nginx ]
 
 - name: Activate custom Jitsi Meet Nginx site.
   file:
@@ -150,3 +164,4 @@
     src: "/etc/nginx/sites-available/{{ inventory_hostname }}.conf"
     state: link
   notify: restart nginx
+  tags: [ jitsi-meet,nginx ]

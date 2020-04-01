@@ -1,7 +1,21 @@
 ---
+## The user account you want to use to logon to vm
 sudo_user: jitsi
 ssh_user: jitsi
+## Add the name of your ssh keys as named in you Hetzner cloud account  
 ssh_keys:
-  - peter.smallegange@yourhosting.local@WPL386
+  - ''
 
-letsencrypt_email: petersmallegang@gmail.com
+## Add the email address for you letsencrypt account
+letsencrypt_email: ''
+
+## Please do not use these secrets change them!! And at best put them in a vault like ansible-vault or some other vault solution.
+jitsi_meet_videobridge_secret: 'HJJ785CvX'
+jitsi_meet_jicofo_secret: '09KlVb5A87'
+jitsi_meet_callcontrol_secret: 'KlFsdY78Rv'
+jitsi_meet_jicofo_password: 'HRwk179Pm'
+
+## hcloud 
+hcloud_server_type: cx11
+hcloud_location: nbg1
+hcloud_image: ubuntu-18.04

@@ -4,28 +4,26 @@
   connection: local
   gather_facts: no
   user: root
-#  vars_prompt:
-#    - name: hostname
-#      prompt: "What will be the FQDN of your vm?" 
-#      private: no
-
-  vars:
-    - hostname: test.ubuntu-laptop.nl
+  vars_prompt:
+    - name: hostname
+      prompt: "What will be the FQDN of your vm?" 
+      private: no
 
   tasks:
 
   - name: Create a basic server
     hcloud_server:
         name: '{{ hostname }}'
-        server_type: cx11
-        location: nbg1
-        image: ubuntu-18.04
+        server_type: '{{ hcloud_server_type }}'
+        location: '{{ hcloud_location }}'
+        image: '{{ hcloud_image }}'
         state: present
         ssh_keys: '{{ ssh_keys }}'
     register: server
     tags: [ always ]
 
-  - debug:
+  - name: Display vm info 
+    debug:
       msg: "{{ server }}"
 
   - name: Register vm_ip and dns_truth for FQDN
@@ -38,14 +36,14 @@
     debug:
       msg: "Please create DNS A record: {{ hostname }}. 60  IN  A  {{ vm_ip }} and a wilcard A record: *.{{ hostname }}. 60  IN  A  {{ vm_ip }}"
     until: dns_truth == vm_ip
-    retries: 1
+    retries: 6
     delay: 10
     ignore_errors: true
 
   - name: Add host to inventory
     add_host:
       hostname: "{{ hostname }}"
-      groups: "jitsi,this-run"
+      groups: "jitsi"
       ansible_host: "{{ vm_ip }}"
     tags: [ always ]
  

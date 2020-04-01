@@ -3,6 +3,7 @@
 - name: Set hostname
   hostname:
     name: '{{ inventory_hostname }}'
+  tags: [ common ]
 
 - name: Install needed packages
   apt:
@@ -10,6 +11,7 @@
     state: latest
     update_cache: yes
   loop: '{{ packages }}'
+  tags: [ common ]
 
 - name: Provision firewalld rules from variable  {{ firewalld }}  
   firewalld:
@@ -19,7 +21,7 @@
     state: '{{ item.state }}'
   loop: '{{ firewalld }}'
   notify: "reload firewall" 
-  tags: [ firewalld ]
+  tags: [ firewalld,common ]
 
 - name: Add user for ssh
   user:
@@ -27,6 +29,7 @@
     shell: /bin/bash
     generate_ssh_key: yes
     ssh_key_bits: 2048
+  tags: [ common ]
 
 - name: Fetch ssh public keys added on vm provisioning and add these 
   copy: 
@@ -35,7 +38,9 @@
     dest: "/home/{{ ssh_user }}/.ssh/authorized_keys"
     owner: '{{ ssh_user }}'
     group: '{{ ssh_user }}'
+    mode: '0600'
   delegate_to: '{{ inventory_hostname }}'
+  tags: [ common ]
 
 - name: Set sudo for {{ ssh_user }}
   template:
@@ -45,9 +50,11 @@
     owner: root
     group: root
     mode: "0440"
+  tags: [ common ]
 
 - name: Put sshd_config in place
   template:
     src: sshd_config.j2
     dest: /etc/ssh/sshd_config
   notify: "reload ssh" 
+  tags: [ common ]
